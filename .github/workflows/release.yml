@@ -84,6 +84,13 @@ jobs:
           [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.noarch\.rpm$')" -eq 1 ]]
           [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.src\.rpm$')" -eq 1 ]]
 
+      - name: Normalize container artifact ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo chown -R "$(id -u):$(id -g)" dist
+          test -w dist
+
       - name: Install release metadata tools
         run: |
           sudo apt-get update
