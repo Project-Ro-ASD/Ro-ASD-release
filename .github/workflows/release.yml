@@ -1,0 +1,196 @@
+name: Release ro-asd-release
+
+"on":
+  push:
+    tags:
+      - "ro-asd-release-v*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish trusted Fedora 44 release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Check out exact tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag, version and main ancestry
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${GITHUB_REF_NAME}"
+          PREFIX="ro-asd-release-v"
+          [[ "${TAG}" == "${PREFIX}"* ]]
+          VERSION="${TAG#${PREFIX}}"
+          [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+          CONTRACT_VERSION="$(awk '$1 == "component_version:" { print $2 }' VERSION.yaml)"
+          SPEC_VERSION="$(awk '/^Version:/ { print $2; exit }' packages/ro-asd-release/ro-asd-release.spec)"
+
+          [[ "${VERSION}" == "${CONTRACT_VERSION}" ]]
+          [[ "${VERSION}" == "${SPEC_VERSION}" ]]
+          [[ "$(git rev-parse HEAD)" == "${GITHUB_SHA}" ]]
+          [[ "$(git rev-parse "refs/tags/${TAG}^{commit}")" == "${GITHUB_SHA}" ]]
+
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install Fedora 44 build tooling
+        run: |
+          docker pull registry.fedoraproject.org/fedora:44@sha256:c64fc79f4a12dd4625d8cba9f7d242ac17c823bdeecc6d650234ebbf5f0ca81b
+
+      - name: Build and verify exact RPM set
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -e SOURCE_COMMIT="${GITHUB_SHA}" \
+            -v "${GITHUB_WORKSPACE}:/work" \
+            -w /work \
+            registry.fedoraproject.org/fedora:44@sha256:c64fc79f4a12dd4625d8cba9f7d242ac17c823bdeecc6d650234ebbf5f0ca81b \
+            bash -lc '
+              set -euo pipefail
+              dnf --assumeyes --setopt=install_weak_deps=False install \
+                git rpm-build python3 tar gzip findutils coreutils
+              ./scripts/build-rpm.sh
+              ./scripts/verify-build.py dist
+            '
+
+          mapfile -t RPMS < <(find dist -maxdepth 1 -type f -name '*.rpm' -printf '%f\n' | sort)
+          [[ "${#RPMS[@]}" -eq 2 ]]
+          [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.noarch\.rpm$')" -eq 1 ]]
+          [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.src\.rpm$')" -eq 1 ]]
+
+      - name: Create clean draft GitHub Release
+        id: draft
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.metadata.outputs.tag }}"
+          EXISTING="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" 2>/dev/null || true)"
+          if [[ -n "${EXISTING}" ]]; then
+            EXISTING_ID="$(jq -r '.id' <<<"${EXISTING}")"
+            IS_DRAFT="$(jq -r '.draft' <<<"${EXISTING}")"
+            if [[ "${IS_DRAFT}" == "true" ]]; then
+              gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${EXISTING_ID}"
+            else
+              echo "Published release ${TAG} already exists; release reuse is forbidden." >&2
+              exit 1
+            fi
+          fi
+
+          RELEASE_JSON="$(gh api --method POST "repos/${GITHUB_REPOSITORY}/releases" \
+            -f tag_name="${TAG}" \
+            -f target_commitish="${GITHUB_SHA}" \
+            -f name="${TAG}" \
+            -F draft=true \
+            -F generate_release_notes=true)"
+
+          RELEASE_ID="$(jq -r '.id' <<<"${RELEASE_JSON}")"
+          [[ "${RELEASE_ID}" =~ ^[0-9]+$ ]]
+          echo "release_id=${RELEASE_ID}" >> "${GITHUB_OUTPUT}"
+
+      - name: Generate canonical Ro-Repo V2 manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 scripts/generate-artifact-manifest.py \
+            --repo-root . \
+            --artifact-dir dist \
+            --output dist/component-artifact-manifest-v1.json \
+            --component ro-asd-release \
+            --repository "${GITHUB_REPOSITORY}" \
+            --commit "${GITHUB_SHA}" \
+            --tag "${{ steps.metadata.outputs.tag }}" \
+            --release-id "${{ steps.draft.outputs.release_id }}" \
+            --workflow-run "${GITHUB_RUN_ID}"
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path("dist/component-artifact-manifest-v1.json").read_text(encoding="utf-8")
+          )
+          assert manifest["schema_version"] == 1
+          assert manifest["component"] == "ro-asd-release"
+          assert manifest["source_repository"] == "Project-Ro-ASD/Ro-ASD-release"
+          assert manifest["fedora_release"] == 44
+          assert {item["architecture"] for item in manifest["artifacts"]} == {"noarch", "src"}
+          PY
+
+      - name: Verify checksum set for release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd dist
+            sha256sum -c SHA256SUMS
+          )
+
+      - name: Attest exact release bundle
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            dist/*.rpm
+            dist/SHA256SUMS
+            dist/component-artifact-manifest-v1.json
+
+      - name: Upload complete bundle to draft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "${{ steps.metadata.outputs.tag }}" \
+            dist/*.rpm \
+            dist/SHA256SUMS \
+            dist/component-artifact-manifest-v1.json \
+            --repo "${GITHUB_REPOSITORY}"
+
+      - name: Verify draft assets and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RELEASE_ID="${{ steps.draft.outputs.release_id }}"
+          mapfile -t EXPECTED < <(
+            {
+              find dist -maxdepth 1 -type f -name '*.rpm' -printf '%f\n'
+              printf '%s\n' SHA256SUMS component-artifact-manifest-v1.json
+            } | sort
+          )
+          mapfile -t ACTUAL < <(
+            gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets" \
+              --paginate --jq '.[].name' | sort
+          )
+
+          [[ "${#EXPECTED[@]}" -eq 4 ]]
+          diff -u <(printf '%s\n' "${EXPECTED[@]}") <(printf '%s\n' "${ACTUAL[@]}")
+
+          gh api --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            -F draft=false >/dev/null
