@@ -71,6 +71,7 @@ find "${topdir}/RPMS" "${topdir}/SRPMS" -type f -name '*.rpm' \
 python3 "${repo_root}/scripts/generate-build-manifest.py" \
   --repo-root "${repo_root}" \
   --artifact-dir "${dist_dir}" \
-  --output "${dist_dir}/build-manifest-v1.json"
+  --output "${dist_dir}/build-manifest-v1.json" \
+  --component ro-asd-release
 
 echo "Çıktılar: ${dist_dir}"
