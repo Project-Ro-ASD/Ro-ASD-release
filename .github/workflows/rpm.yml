@@ -36,6 +36,6 @@ jobs:
           path: |
             dist/*.rpm
             dist/SHA256SUMS
-            dist/component-artifact-manifest-v1.json
+            dist/build-manifest-v1.json
           if-no-files-found: error
           retention-days: 14
