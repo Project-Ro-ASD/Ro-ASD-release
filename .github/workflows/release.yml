@@ -84,6 +84,11 @@ jobs:
           [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.noarch\.rpm$')" -eq 1 ]]
           [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.src\.rpm$')" -eq 1 ]]
 
+      - name: Install release metadata tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm jq
+
       - name: Create clean draft GitHub Release
         id: draft
         shell: bash
