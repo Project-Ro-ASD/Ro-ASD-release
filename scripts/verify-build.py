@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify checksums and the minimum Fedora 44 RPM/SRPM output contract."""
+"""Verify checksums and the Fedora 44 CI build output contract."""
 
 from __future__ import annotations
 
@@ -31,16 +31,18 @@ def main() -> int:
     parser.add_argument("artifact_dir", type=Path)
     args = parser.parse_args()
     try:
-        manifest_path = args.artifact_dir / "component-artifact-manifest-v1.json"
+        manifest_path = args.artifact_dir / "build-manifest-v1.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest.get("schema_version") != "component-artifact-manifest-v1":
-            raise ValueError("manifest schema_version geçersiz")
+        if manifest.get("schema_version") != "ro-asd-build-manifest-v1":
+            raise ValueError("build manifest schema_version geçersiz")
         if manifest.get("build", {}).get("fedora_release") != 44:
-            raise ValueError("manifest Fedora 44 değil")
+            raise ValueError("build manifest Fedora 44 değil")
+        if manifest.get("component", {}).get("name") != "ro-asd-release":
+            raise ValueError("build manifest component adı geçersiz")
 
         artifacts = manifest.get("artifacts")
         if not isinstance(artifacts, list):
-            raise ValueError("manifest artifacts dizisi eksik")
+            raise ValueError("build manifest artifacts dizisi eksik")
         binaries: set[tuple[str, str, str]] = set()
         sources: set[tuple[str, str, str]] = set()
         for artifact in artifacts:
@@ -62,14 +64,14 @@ def main() -> int:
             key = (source_name, version, release)
             if arch == "src":
                 sources.add((name, version, release))
-            elif arch in {"x86_64", "noarch"}:
+            elif arch == "noarch":
                 binaries.add(key)
             else:
-                raise ValueError(f"ilk beta için desteklenmeyen mimari: {arch}")
+                raise ValueError(f"ro-asd-release için desteklenmeyen mimari: {arch}")
         if not binaries:
-            raise ValueError("ikili veya noarch RPM eksik")
+            raise ValueError("noarch RPM eksik")
         if binaries - sources:
-            raise ValueError("ikili RPM ile eşleşen SRPM eksik")
+            raise ValueError("binary RPM ile eşleşen SRPM eksik")
 
         expected_checksums = {
             line.split(maxsplit=1)[1].lstrip("*"): line.split(maxsplit=1)[0]
@@ -84,10 +86,16 @@ def main() -> int:
         for name, digest in expected_checksums.items():
             if sha256(args.artifact_dir / name) != digest:
                 raise ValueError(f"SHA256SUMS doğrulaması başarısız: {name}")
+
+        # A normal CI build must never impersonate an immutable producer release.
+        if (args.artifact_dir / "component-artifact-manifest-v1.json").exists():
+            raise ValueError(
+                "CI build içinde release-only component-artifact-manifest-v1.json bulundu"
+            )
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         print(f"HATA: {error}", file=sys.stderr)
         return 1
-    print("OK: Fedora 44 RPM, SRPM, checksum ve manifest çıktıları tutarlı")
+    print("OK: Fedora 44 RPM, SRPM, checksum ve CI build manifest çıktıları tutarlı")
     return 0
 
 
