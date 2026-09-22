@@ -1,53 +1,61 @@
 #!/usr/bin/env python3
-"""Create a component artifact manifest from built RPM files."""
+"""Generate the canonical Ro-Repo V2 component release manifest."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-import os
+import re
 import subprocess
 from pathlib import Path
 
 from version_lib import load_version, validate_version
 
-BUILDER_IMAGE = (
-    "registry.fedoraproject.org/fedora:44@"
-    "sha256:c64fc79f4a12dd4625d8cba9f7d242ac17c823bdeecc6d650234ebbf5f0ca81b"
-)
+REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def command(*arguments: str) -> str:
-    return subprocess.check_output(arguments, text=True).strip()
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def rpm_metadata(path: Path) -> dict[str, object]:
-    query = "%{NAME}\\n%{EPOCHNUM}\\n%{VERSION}\\n%{RELEASE}\\n%{ARCH}\\n"
-    values = command("rpm", "-qp", "--qf", query, str(path)).splitlines()
-    if len(values) != 5:
-        raise ValueError(f"{path}: beklenmeyen RPM sorgu çıktısı")
-    name, epoch, version, release, rpm_arch = values
-    artifact_type = "srpm" if path.name.endswith(".src.rpm") else "rpm"
-    arch = "src" if artifact_type == "srpm" else rpm_arch
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+def rpm_header(path: Path) -> dict[str, object]:
+    query = (
+        "%{NAME}\\t%{EPOCHNUM}\\t%{VERSION}\\t%{RELEASE}\\t"
+        "%{ARCH}\\t%{SOURCERPM}\\t%|SOURCEPACKAGE?{true}:{false}|"
+    )
+    values = subprocess.check_output(
+        ["rpm", "-qp", "--qf", query, str(path)], text=True
+    ).split("\t")
+    if len(values) != 7:
+        raise ValueError(f"{path}: beklenmeyen RPM header çıktısı")
+
+    name, epoch, version, release, arch, source_rpm, is_source = values
+    if is_source == "true":
+        arch = "src"
+        source_rpm = None
+
     return {
-        "type": artifact_type,
         "filename": path.name,
         "name": name,
-        "source_name": "ro-asd-release",
-        "epoch": int(epoch),
+        "epoch": int(epoch or 0),
         "version": version,
         "release": release,
-        "arch": arch,
-        "size": path.stat().st_size,
-        "sha256": digest,
+        "architecture": arch,
+        "source_rpm": source_rpm,
+        "producer_artifact_sha256": sha256(path),
     }
 
 
-def nullable_env(name: str) -> str | None:
-    value = os.environ.get(name)
-    return value if value else None
+def positive_int(value: str, field: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise ValueError(f"{field} pozitif tam sayı olmalı") from error
+    if parsed <= 0:
+        raise ValueError(f"{field} pozitif tam sayı olmalı")
+    return parsed
 
 
 def main() -> int:
@@ -55,49 +63,63 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True, type=Path)
     parser.add_argument("--artifact-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--component", required=True)
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--commit", required=True)
+    parser.add_argument("--tag", required=True)
+    parser.add_argument("--release-id", required=True)
+    parser.add_argument("--workflow-run", required=True)
     args = parser.parse_args()
 
     values = load_version(args.repo_root / "VERSION.yaml")
     validate_version(values)
-    artifacts = [
-        rpm_metadata(path)
-        for path in sorted(args.artifact_dir.glob("*.rpm"), key=lambda item: item.name)
-    ]
-    if not artifacts:
-        raise ValueError("manifest için RPM/SRPM bulunamadı")
 
-    commit = os.environ.get("SOURCE_COMMIT") or command(
-        "git", "-C", str(args.repo_root), "rev-parse", "HEAD"
-    )
-    tag = nullable_env("SOURCE_TAG")
-    release_url = nullable_env("SOURCE_RELEASE_URL")
-    run_id = nullable_env("GITHUB_RUN_ID")
-    run_url = (
-        f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run_id}"
-        if run_id and os.environ.get("GITHUB_REPOSITORY")
-        else None
-    )
-    build_kind = "release" if tag and release_url else "ci"
+    if not REPOSITORY_RE.fullmatch(args.repository):
+        raise ValueError("repository owner/name biçiminde olmalı")
+    if not COMMIT_RE.fullmatch(args.commit):
+        raise ValueError("commit tam 40 karakter küçük harf SHA-1 olmalı")
+    if not args.tag.strip():
+        raise ValueError("tag boş olamaz")
+    if args.component != "ro-asd-release":
+        raise ValueError("ilk contract yalnız ro-asd-release component'ini destekliyor")
+
+    release_id = positive_int(args.release_id, "release-id")
+    workflow_run = positive_int(args.workflow_run, "workflow-run")
+
+    rpm_paths = sorted(args.artifact_dir.glob("*.rpm"), key=lambda item: item.name)
+    if not rpm_paths:
+        raise ValueError("release manifest için RPM/SRPM bulunamadı")
+
+    artifacts = [rpm_header(path) for path in rpm_paths]
+    package_names = {str(item["name"]) for item in artifacts}
+    if package_names != {args.component}:
+        raise ValueError(
+            f"beklenmeyen package set: {sorted(package_names)}; "
+            f"yalnız {args.component!r} bekleniyor"
+        )
+    if not any(item["architecture"] == "src" for item in artifacts):
+        raise ValueError("SRPM eksik")
+    if not any(item["architecture"] == "noarch" for item in artifacts):
+        raise ValueError("noarch binary RPM eksik")
+
     manifest = {
-        "schema_version": values["component_artifact_manifest"],
-        "component": {
-            "name": "ro-asd-release",
-            "version": values["component_version"],
-        },
-        "source": {
-            "repository": "https://github.com/Project-Ro-ASD/Ro-ASD-release",
-            "commit": commit,
-            "tag": tag,
-            "release_url": release_url,
-        },
-        "build": {
-            "kind": build_kind,
-            "fedora_release": int(values["fedora_release"]),
-            "workflow_run_id": run_id,
-            "workflow_run_url": run_url,
-            "builder_image": BUILDER_IMAGE,
-        },
+        "schema_version": 1,
+        "component": args.component,
+        "source_repository": args.repository,
+        "source_commit": args.commit,
+        "release_tag": args.tag,
+        "release_id": release_id,
+        "workflow_run": workflow_run,
+        "fedora_release": int(values["fedora_release"]),
         "artifacts": artifacts,
+        "provenance": {
+            "provider": "github",
+            "subject_digest": "sha256",
+        },
+        "attestation": {
+            "provider": "github",
+            "verification": "gh attestation verify",
+        },
     }
     args.output.write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
