@@ -80,8 +80,8 @@ def main() -> int:
         raise ValueError("commit tam 40 karakter küçük harf SHA-1 olmalı")
     if not args.tag.strip():
         raise ValueError("tag boş olamaz")
-    if args.component != "ro-asd-release":
-        raise ValueError("ilk contract yalnız ro-asd-release component'ini destekliyor")
+    if args.component not in {"ro-asd-release", "ro-asd-keyring"}:
+        raise ValueError("desteklenmeyen release component'i")
 
     release_id = positive_int(args.release_id, "release-id")
     workflow_run = positive_int(args.workflow_run, "workflow-run")

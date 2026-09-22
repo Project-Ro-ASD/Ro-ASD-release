@@ -1,0 +1,8 @@
+schema_version: 1
+component: ro-asd-keyring
+component_version: 0.1.0
+component_release: 1
+fedora_release: 44
+rpm_signing_fingerprint: 38CB87F6FBD645309432A6E22E02DEE8828B769B
+metadata_signing_fingerprint: 1715DDA529B9ADB46D47CB389A62B8F9026E75E5
+source_snapshot: repo-f44-20260920-001

@@ -10,7 +10,7 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | Paket ailesi | Sahip olduğu alan | Bugünkü durum |
 | --- | --- | --- |
 | `ro-asd-release` | Makinece okunabilir Ro-ASD/Fedora sürüm metadatası | İlk çalışan RPM iskeleti |
-| `ro-asd-keyring` | Ro-ASD public trust anahtarları | Planlandı |
+| `ro-asd-keyring` | Ro-ASD public trust anahtarları | İlk çalışan RPM iskeleti |
 | `ro-asd-repos` | İstemci repo dosyaları | Ro-Repo V2 sözleşmesini bekliyor |
 | `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Fedora marka incelemesini bekliyor |
 | `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Sahiplik matrisi hazırlanacak |
@@ -22,7 +22,7 @@ yaşayabilirler ancak bağımsız sürümlenir ve bağımsız SRPM üretirler.
 
 ## İlk çalışan parça
 
-Yalnızca `packages/ro-asd-release` bugün gerçek spec içerir. Paket şu güvenli
+`packages/ro-asd-release` ve `packages/ro-asd-keyring` bugün gerçek spec içerir. Paket şu güvenli
 dosyaları kurar:
 
 - `/usr/lib/ro-asd/release.json`
@@ -73,13 +73,23 @@ Trusted `.github/workflows/release.yml` şu zinciri uygular:
 Producer RPM'leri production anahtarıyla imzalamaz. Production RPM/repository
 imzası Ro-Repo tarafından merkezi olarak uygulanır.
 
-Monorepo içindeki diğer paket aileleri ileride kendi component-scoped tag
-alanlarını kullanacaktır, örneğin `ro-asd-repos-vX.Y.Z`.
+Monorepo içindeki paket aileleri kendi component-scoped tag alanlarını kullanır.
+Örneğin `ro-asd-release-vX.Y.Z`, `ro-asd-keyring-vX.Y.Z` ve ileride
+`ro-asd-repos-vX.Y.Z`.
+
+`ro-asd-keyring`, yalnız public OpenPGP trust material taşır. İlk keyring
+sürümündeki RPM ve repository-metadata anahtarları Ro-Repo'nun immutable
+`repo-f44-20260920-001` snapshot'ından vendörlenmiştir. Beklenen signing
+subkey fingerprint'leri package contract içinde pinlenir:
+
+- RPM: `38CB87F6FBD645309432A6E22E02DEE8828B769B`
+- repository metadata: `1715DDA529B9ADB46D47CB389A62B8F9026E75E5`
+
+Private signing key hiçbir zaman bu depoya veya keyring RPM'ine girmez.
 
 ## Bilinçli olarak bekletilen işler
 
 - Canlı alan adı ve repo URL'lerinin pakete yazılması
-- Public trust anahtarlarının `ro-asd-keyring` paketine eklenmesi
 - Fedora kimlik dosyalarının değiştirilmesi
 - KIWI compose ve ISO üretimi
 - Diğer paket ailelerinin production producer workflow'a bağlanması

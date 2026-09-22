@@ -29,6 +29,7 @@ def sha256(path: Path) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("artifact_dir", type=Path)
+    parser.add_argument("--component", default="ro-asd-release")
     args = parser.parse_args()
     try:
         manifest_path = args.artifact_dir / "build-manifest-v1.json"
@@ -37,7 +38,7 @@ def main() -> int:
             raise ValueError("build manifest schema_version geçersiz")
         if manifest.get("build", {}).get("fedora_release") != 44:
             raise ValueError("build manifest Fedora 44 değil")
-        if manifest.get("component", {}).get("name") != "ro-asd-release":
+        if manifest.get("component", {}).get("name") != args.component:
             raise ValueError("build manifest component adı geçersiz")
 
         artifacts = manifest.get("artifacts")
@@ -59,7 +60,7 @@ def main() -> int:
             if artifact["size"] != path.stat().st_size:
                 raise ValueError(f"dosya boyutu uyuşmuyor: {path.name}")
             source_name = artifact.get("source_name")
-            if source_name != "ro-asd-release":
+            if source_name != args.component:
                 raise ValueError(f"beklenmeyen kaynak paket adı: {source_name}")
             key = (source_name, version, release)
             if arch == "src":
@@ -67,7 +68,7 @@ def main() -> int:
             elif arch == "noarch":
                 binaries.add(key)
             else:
-                raise ValueError(f"ro-asd-release için desteklenmeyen mimari: {arch}")
+                raise ValueError(f"{args.component} için desteklenmeyen mimari: {arch}")
         if not binaries:
             raise ValueError("noarch RPM eksik")
         if binaries - sources:
