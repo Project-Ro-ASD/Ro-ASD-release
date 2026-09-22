@@ -27,7 +27,7 @@ def command(*arguments: str) -> str:
     return subprocess.check_output(arguments, text=True).strip()
 
 
-def rpm_metadata(path: Path) -> dict[str, object]:
+def rpm_metadata(path: Path, source_name: str) -> dict[str, object]:
     query = "%{NAME}\\n%{EPOCHNUM}\\n%{VERSION}\\n%{RELEASE}\\n%{ARCH}\\n"
     values = command("rpm", "-qp", "--qf", query, str(path)).splitlines()
     if len(values) != 5:
@@ -40,7 +40,7 @@ def rpm_metadata(path: Path) -> dict[str, object]:
         "type": artifact_type,
         "filename": path.name,
         "name": name,
-        "source_name": "ro-asd-release",
+        "source_name": source_name,
         "epoch": int(epoch),
         "version": version,
         "release": release,
@@ -55,12 +55,15 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True, type=Path)
     parser.add_argument("--artifact-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--component", default="ro-asd-release")
+    parser.add_argument("--component-version")
     args = parser.parse_args()
 
     values = load_version(args.repo_root / "VERSION.yaml")
     validate_version(values)
+    component_version = args.component_version or values["component_version"]
     artifacts = [
-        rpm_metadata(path)
+        rpm_metadata(path, args.component)
         for path in sorted(args.artifact_dir.glob("*.rpm"), key=lambda item: item.name)
     ]
     if not artifacts:
@@ -72,8 +75,8 @@ def main() -> int:
     manifest = {
         "schema_version": "ro-asd-build-manifest-v1",
         "component": {
-            "name": "ro-asd-release",
-            "version": values["component_version"],
+            "name": args.component,
+            "version": component_version,
         },
         "source": {
             "repository": "Project-Ro-ASD/Ro-ASD-release",
