@@ -6,5 +6,5 @@ fedora_release: 44
 phase: development
 primary_architecture: x86_64
 component_artifact_manifest: component-artifact-manifest-v1
-component_version: 0.1.1
+component_version: 0.1.2
 component_release: 1
