@@ -19,6 +19,8 @@ EXPECTED_KEYS = {
     "component_release",
 }
 KEY_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+SEMVER_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+POSITIVE_INT_PATTERN = re.compile(r"^[1-9][0-9]*$")
 
 
 def load_version(path: Path) -> dict[str, str]:
@@ -50,7 +52,7 @@ def load_version(path: Path) -> dict[str, str]:
 
 
 def validate_version(values: dict[str, str]) -> None:
-    expected = {
+    fixed_expected = {
         "schema_version": "1",
         "product_name": "Ro-ASD",
         "product_release": "44",
@@ -59,13 +61,24 @@ def validate_version(values: dict[str, str]) -> None:
         "phase": "development",
         "primary_architecture": "x86_64",
         "component_artifact_manifest": "component-artifact-manifest-v1",
-        "component_version": "0.1.0",
-        "component_release": "1",
     }
     errors = [
         f"{key}: {expected_value!r} bekleniyor, {values.get(key)!r} bulundu"
-        for key, expected_value in expected.items()
+        for key, expected_value in fixed_expected.items()
         if values.get(key) != expected_value
     ]
+
+    component_version = values.get("component_version", "")
+    if not SEMVER_PATTERN.fullmatch(component_version):
+        errors.append(
+            f"component_version: X.Y.Z semver bekleniyor, {component_version!r} bulundu"
+        )
+
+    component_release = values.get("component_release", "")
+    if not POSITIVE_INT_PATTERN.fullmatch(component_release):
+        errors.append(
+            f"component_release: pozitif tam sayı bekleniyor, {component_release!r} bulundu"
+        )
+
     if errors:
         raise ValueError("; ".join(errors))

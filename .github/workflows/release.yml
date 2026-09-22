@@ -96,10 +96,9 @@ jobs:
           set -euo pipefail
 
           TAG="${{ steps.metadata.outputs.tag }}"
-          EXISTING="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" 2>/dev/null || true)"
-          if [[ -n "${EXISTING}" ]]; then
-            EXISTING_ID="$(jq -r '.id' <<<"${EXISTING}")"
-            IS_DRAFT="$(jq -r '.draft' <<<"${EXISTING}")"
+          if EXISTING="$(gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" --json databaseId,isDraft 2>/dev/null)"; then
+            EXISTING_ID="$(jq -r '.databaseId' <<<"${EXISTING}")"
+            IS_DRAFT="$(jq -r '.isDraft' <<<"${EXISTING}")"
             if [[ "${IS_DRAFT}" == "true" ]]; then
               gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${EXISTING_ID}"
             else
