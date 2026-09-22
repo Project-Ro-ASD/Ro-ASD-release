@@ -1,5 +1,5 @@
 Name:           ro-asd-release
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 Summary:        Ro-ASD release metadata
 
@@ -33,6 +33,9 @@ ln -s ../usr/lib/ro-asd/release %{buildroot}%{_sysconfdir}/ro-asd-release
 %{_sysconfdir}/ro-asd-release
 
 %changelog
+* Tue Sep 22 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.2-1
+- Restore host ownership of release artifacts after container builds
+
 * Tue Sep 22 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.1-1
 - Fix trusted release detection for the next canary
 
