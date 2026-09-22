@@ -65,9 +65,12 @@ find "${topdir}/RPMS" "${topdir}/SRPMS" -type f -name '*.rpm' \
     | xargs -r sha256sum
 ) > "${dist_dir}/SHA256SUMS"
 
-python3 "${repo_root}/scripts/generate-artifact-manifest.py" \
+# CI builds deliberately emit only a build manifest. The canonical
+# component-artifact-manifest-v1 requires a real immutable GitHub Release ID,
+# so it is generated only by the trusted release workflow.
+python3 "${repo_root}/scripts/generate-build-manifest.py" \
   --repo-root "${repo_root}" \
   --artifact-dir "${dist_dir}" \
-  --output "${dist_dir}/component-artifact-manifest-v1.json"
+  --output "${dist_dir}/build-manifest-v1.json"
 
 echo "Çıktılar: ${dist_dir}"
