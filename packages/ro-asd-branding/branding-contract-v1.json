@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "component": "ro-asd-branding",
+  "fedora_release": 44,
+  "distribution": {
+    "id": "ro-asd",
+    "name": "Ro-ASD",
+    "pretty_name": "Ro-ASD 44",
+    "base_distribution": "Fedora Linux",
+    "base_release": "44",
+    "homepage": "https://ro-asd.org/"
+  },
+  "principles": {
+    "replace_fedora_release_files": false,
+    "provide_system_release": false,
+    "overwrite_fedora_logos": false,
+    "duplicate_theme_assets": false
+  },
+  "delegated_domains": {
+    "release_metadata": "ro-asd-release",
+    "visual_theme": "ro-theme",
+    "defaults": "ro-asd-defaults"
+  },
+  "reserved_exact_paths": [
+    "/usr/lib/os-release",
+    "/etc/os-release",
+    "/etc/fedora-release",
+    "/etc/system-release",
+    "/etc/redhat-release"
+  ],
+  "reserved_path_prefixes": [
+    "/usr/share/pixmaps/fedora",
+    "/usr/share/icons/hicolor/",
+    "/usr/share/backgrounds/",
+    "/usr/share/plasma/",
+    "/usr/share/plymouth/"
+  ],
+  "future_owned_domains": [
+    "ro-asd logos and wordmarks",
+    "distribution-facing application identity assets",
+    "installer and about-page branding assets",
+    "Ro-ASD-specific desktop files and icon names"
+  ]
+}
