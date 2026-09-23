@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "component": "ro-asd-desktop-standard",
+  "profile": "desktop-standard",
+  "fedora_release": 44,
+  "provides": [
+    "ro-asd-desktop-profile"
+  ],
+  "required_components": [
+    {
+      "name": "ro-asd-release",
+      "minimum_version": "0.1.2"
+    },
+    {
+      "name": "ro-asd-keyring",
+      "minimum_version": "0.1.0"
+    },
+    {
+      "name": "ro-asd-repos",
+      "minimum_version": "0.1.0"
+    },
+    {
+      "name": "ro-asd-defaults",
+      "minimum_version": "0.1.0"
+    },
+    {
+      "name": "ro-asd-branding",
+      "minimum_version": "0.1.0"
+    }
+  ],
+  "lifecycle": {
+    "installer": "ro-installer",
+    "initial_setup": "plasma-setup",
+    "post_login_onboarding": "ro-assist"
+  },
+  "pending_integrations": [
+    "ro-theme",
+    "ro-assist",
+    "ro-asd-plasma-setup"
+  ],
+  "optional_components": [
+    "ro-control",
+    "ro-music",
+    "ro-terminal"
+  ],
+  "principles": {
+    "duplicate_fedora_kde_package_set": false,
+    "require_pending_integrations": false,
+    "own_user_configuration": false,
+    "own_kernel_policy": false,
+    "own_theme_assets": false
+  }
+}
