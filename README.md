@@ -15,14 +15,14 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Branding contract v1 + ilk RPM iskeleti |
 | `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Ownership contract v1 + ilk RPM iskeleti |
 | `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek kanal politikası | Fedora 44 çekirdek kaynağını bekliyor |
-| `ro-asd-desktop-standard` | Standart profil meta-paketi | Theme ve Assist teslimlerini bekliyor |
+| `ro-asd-desktop-standard` | Standart profil meta-paketi | Profile contract v1 + foundation meta-package |
 
 Bu paket aileleri tek spec içinde birleştirilmeyecektir. Aynı Git deposunda
 yaşayabilirler ancak bağımsız sürümlenir ve bağımsız SRPM üretirler.
 
 ## İlk çalışan parça
 
-`packages/ro-asd-release`, `packages/ro-asd-keyring`, `packages/ro-asd-repos`, `packages/ro-asd-defaults` ve `packages/ro-asd-branding` bugün gerçek spec içerir. Paket şu güvenli
+`packages/ro-asd-release`, `packages/ro-asd-keyring`, `packages/ro-asd-repos`, `packages/ro-asd-defaults`, `packages/ro-asd-branding` ve `packages/ro-asd-desktop-standard` bugün gerçek spec içerir. Paket şu güvenli
 dosyaları kurar:
 
 - `/usr/lib/ro-asd/release.json`
@@ -128,3 +128,14 @@ Mevcut Ro-Theme logosu v1'de Ro-Theme sahipliğinde kalır. Logo asset'leri
 branding paketine ancak tek canonical source-of-truth belirlendikten sonra
 taşınacaktır. Ayrıntılı sınırlar `docs/BRANDING-CONTRACT-V1.md` ve
 `packages/ro-asd-branding/branding-contract-v1.json` içindedir.
+
+
+## Desktop standard profile modeli
+
+`ro-asd-desktop-standard` Fedora KDE paket listesini kopyalamaz. İlk 0.1.0
+sürümü yalnız güven zinciri tamamlanmış Ro-ASD foundation bileşenlerini
+dependency olarak bağlar ve standard desktop profile contract'ını taşır.
+
+Ro-Theme, Ro-Assist ve olası Ro-ASD Plasma Setup downstream entegrasyonu
+mimarileri tamamlanana kadar hard dependency değildir. Fedora KDE temel paket
+seçimi gelecekteki compose katmanının sorumluluğundadır.
