@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "component": "ro-asd-defaults",
+  "fedora_release": 44,
+  "configuration_model": "xdg-cascade",
+  "principles": {
+    "write_user_home": false,
+    "use_etc_skel": false,
+    "immutable_kconfig": false,
+    "config_files_noreplace": true,
+    "preserve_user_overrides": true
+  },
+  "delegated_domains": {
+    "visual_theme": "ro-theme",
+    "branding": "ro-asd-branding",
+    "release_identity": "ro-asd-release",
+    "repository_configuration": "ro-asd-repos",
+    "trust_keys": "ro-asd-keyring",
+    "kernel_policy": "ro-asd-kernel-policy",
+    "package_composition": "ro-asd-desktop-standard"
+  },
+  "forbidden_exact_paths": [
+    "/usr/lib/os-release",
+    "/etc/os-release"
+  ],
+  "forbidden_path_prefixes": [
+    "/home/",
+    "/root/",
+    "/etc/skel/",
+    "/etc/yum.repos.d/",
+    "/etc/pki/rpm-gpg/",
+    "/boot/",
+    "/etc/kernel/",
+    "/usr/lib/modules/",
+    "/usr/share/plasma/look-and-feel/",
+    "/usr/share/color-schemes/",
+    "/usr/share/wallpapers/",
+    "/usr/share/icons/",
+    "/usr/share/themes/",
+    "/usr/share/plymouth/",
+    "/usr/lib/plasmalogin/",
+    "/usr/share/plasma/layout-templates/"
+  ],
+  "temporarily_delegated_paths": [
+    "/etc/xdg/kdeglobals",
+    "/etc/xdg/plasmarc",
+    "/etc/xdg/ksplashrc",
+    "/etc/xdg/kscreenlockerrc",
+    "/etc/xdg/kwinrc"
+  ]
+}
