@@ -163,3 +163,34 @@ jobs:
             dist/build-manifest-v1.json
           if-no-files-found: error
           retention-days: 14
+
+
+  build-desktop-standard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      image: registry.fedoraproject.org/fedora:44@sha256:c64fc79f4a12dd4625d8cba9f7d242ac17c823bdeecc6d650234ebbf5f0ca81b
+    steps:
+      - name: Install build dependencies
+        run: dnf --assumeyes --setopt=install_weak_deps=False install git rpm-build python3 tar gzip findutils coreutils
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build and verify desktop-standard RPM output
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          bash ./scripts/build-desktop-standard-rpm.sh
+          python3 ./scripts/verify-build.py dist --component ro-asd-desktop-standard
+
+      - name: Upload desktop-standard CI evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ro-asd-desktop-standard-fedora-44-${{ github.sha }}
+          path: |
+            dist/*.rpm
+            dist/SHA256SUMS
+            dist/build-manifest-v1.json
+          if-no-files-found: error
+          retention-days: 14
