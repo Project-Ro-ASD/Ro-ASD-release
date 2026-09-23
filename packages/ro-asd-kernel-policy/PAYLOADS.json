@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "component": "ro-asd-kernel-policy",
+  "payloads": [
+    {
+      "path": "/usr/share/ro-asd/kernel/kernel-policy-v1.json",
+      "class": "policy-metadata"
+    }
+  ]
+}

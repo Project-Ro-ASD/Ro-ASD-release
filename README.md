@@ -14,7 +14,7 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | `ro-asd-repos` | İstemci repo dosyaları | İlk çalışan RPM iskeleti |
 | `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Branding contract v1 + ilk RPM iskeleti |
 | `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Ownership contract v1 + ilk RPM iskeleti |
-| `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek kanal politikası | Fedora 44 çekirdek kaynağını bekliyor |
+| `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek yaşam döngüsü politikası | Policy contract v1 + güvenli foundation RPM |
 | `ro-asd-desktop-standard` | Standart profil meta-paketi | Profile contract v1 + foundation meta-package |
 
 Bu paket aileleri tek spec içinde birleştirilmeyecektir. Aynı Git deposunda
@@ -139,3 +139,17 @@ dependency olarak bağlar ve standard desktop profile contract'ını taşır.
 Ro-Theme, Ro-Assist ve olası Ro-ASD Plasma Setup downstream entegrasyonu
 mimarileri tamamlanana kadar hard dependency değildir. Fedora KDE temel paket
 seçimi gelecekteki compose katmanının sorumluluğundadır.
+
+
+## Kernel policy foundation modeli
+
+`ro-asd-kernel-policy 0.1.0` yalnız machine-readable kernel lifecycle ve
+safety contract taşır. Fedora kernel paketlerini kaldırmaz veya exclude etmez,
+harici repo açmaz, bootloader varsayılanını değiştirmez ve Secure Boot durumuna
+dokunmaz.
+
+Kernel seçimi Ro Installer veya Plasma Setup'a ait değildir. Gelecekte kullanıcı
+seçimi Ro-Assist üzerinden yapılacak, image'ın boot edilebilir baseline kerneli
+ise compose katmanı tarafından sağlanacaktır. Aktif enforcement ancak trusted
+kernel producer, Secure Boot signing, fallback boot ve rollback kanıtları
+tamamlandıktan sonra ayrı bir sürümle açılacaktır.

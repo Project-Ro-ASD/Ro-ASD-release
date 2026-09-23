@@ -1,0 +1,6 @@
+schema_version: 1
+component: ro-asd-kernel-policy
+component_version: 0.1.0
+component_release: 1
+fedora_release: 44
+kernel_policy_schema: 1

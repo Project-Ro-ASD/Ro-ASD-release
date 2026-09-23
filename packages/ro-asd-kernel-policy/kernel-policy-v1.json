@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "component": "ro-asd-kernel-policy",
+  "fedora_release": 44,
+  "policy_version": 1,
+  "channels": {
+    "standard": {
+      "purpose": "default supported kernel channel",
+      "activation": "deferred"
+    },
+    "experimental": {
+      "purpose": "opt-in testing kernel channel",
+      "activation": "deferred"
+    },
+    "fallback": {
+      "purpose": "known-good recovery kernel",
+      "activation": "deferred"
+    }
+  },
+  "ownership": {
+    "installer_kernel_selection": false,
+    "initial_setup_kernel_selection": false,
+    "post_login_selection_owner": "ro-assist",
+    "image_baseline_owner": "ro-asd-compose",
+    "kernel_package_producer": "deferred"
+  },
+  "invariants": {
+    "preserve_at_least_one_known_good_bootable_kernel": true,
+    "experimental_is_never_automatic": true,
+    "offline_install_must_have_bootable_baseline_kernel": true,
+    "secure_boot_chain_required_before_ro_kernel_enforcement": true
+  },
+  "inactive_actions": {
+    "install_kernel_packages": false,
+    "remove_fedora_kernel_packages": false,
+    "exclude_fedora_kernel_packages": false,
+    "enable_external_kernel_repositories": false,
+    "change_bootloader_default": false,
+    "rewrite_kernel_command_line": false,
+    "mutate_secure_boot_state": false,
+    "enforce_kernel_channel": false
+  },
+  "activation_gates": [
+    "trusted kernel producer established",
+    "Secure Boot signing chain verified",
+    "fallback boot path tested",
+    "upgrade and rollback evidence available",
+    "Ro-Assist kernel management ready"
+  ]
+}
