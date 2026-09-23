@@ -13,7 +13,7 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | `ro-asd-keyring` | Ro-ASD public trust anahtarları | İlk çalışan RPM iskeleti |
 | `ro-asd-repos` | İstemci repo dosyaları | İlk çalışan RPM iskeleti |
 | `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Fedora marka incelemesini bekliyor |
-| `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Sahiplik matrisi hazırlanacak |
+| `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Ownership contract v1 + ilk RPM iskeleti |
 | `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek kanal politikası | Fedora 44 çekirdek kaynağını bekliyor |
 | `ro-asd-desktop-standard` | Standart profil meta-paketi | Theme ve Assist teslimlerini bekliyor |
 
@@ -22,7 +22,7 @@ yaşayabilirler ancak bağımsız sürümlenir ve bağımsız SRPM üretirler.
 
 ## İlk çalışan parça
 
-`packages/ro-asd-release`, `packages/ro-asd-keyring` ve `packages/ro-asd-repos` bugün gerçek spec içerir. Paket şu güvenli
+`packages/ro-asd-release`, `packages/ro-asd-keyring`, `packages/ro-asd-repos` ve `packages/ro-asd-defaults` bugün gerçek spec içerir. Paket şu güvenli
 dosyaları kurar:
 
 - `/usr/lib/ro-asd/release.json`
@@ -103,3 +103,16 @@ Private signing key hiçbir zaman bu depoya veya keyring RPM'ine girmez.
 - Fedora kimlik dosyalarının değiştirilmesi
 - KIWI compose ve ISO üretimi
 - Diğer paket ailelerinin production producer workflow'a bağlanması
+
+
+## Defaults ownership modeli
+
+`ro-asd-defaults` kullanıcı home dizinlerine yazmaz, `/etc/skel/.config`
+üzerinden kullanıcı ayarı kopyalamaz ve normal distro varsayılanlarını KConfig
+immutable hale getirmez. İlk `0.1.0` sürümü yalnız machine-readable ownership
+contract taşır ve masaüstü davranışını değiştirmez.
+
+Tema, wallpaper, icon/cursor, Plymouth ve mevcut tema KConfig dosyaları
+`ro-theme` sahipliğinde kalır. Ayrıntılı sınırlar
+`docs/DEFAULTS-OWNERSHIP-V1.md` ve
+`packages/ro-asd-defaults/defaults-policy-v1.json` içindedir.
