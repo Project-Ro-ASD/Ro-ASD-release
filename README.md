@@ -12,7 +12,7 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | `ro-asd-release` | Makinece okunabilir Ro-ASD/Fedora sürüm metadatası | İlk çalışan RPM iskeleti |
 | `ro-asd-keyring` | Ro-ASD public trust anahtarları | İlk çalışan RPM iskeleti |
 | `ro-asd-repos` | İstemci repo dosyaları | İlk çalışan RPM iskeleti |
-| `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Fedora marka incelemesini bekliyor |
+| `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Branding contract v1 + ilk RPM iskeleti |
 | `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Ownership contract v1 + ilk RPM iskeleti |
 | `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek kanal politikası | Fedora 44 çekirdek kaynağını bekliyor |
 | `ro-asd-desktop-standard` | Standart profil meta-paketi | Theme ve Assist teslimlerini bekliyor |
@@ -22,7 +22,7 @@ yaşayabilirler ancak bağımsız sürümlenir ve bağımsız SRPM üretirler.
 
 ## İlk çalışan parça
 
-`packages/ro-asd-release`, `packages/ro-asd-keyring`, `packages/ro-asd-repos` ve `packages/ro-asd-defaults` bugün gerçek spec içerir. Paket şu güvenli
+`packages/ro-asd-release`, `packages/ro-asd-keyring`, `packages/ro-asd-repos`, `packages/ro-asd-defaults` ve `packages/ro-asd-branding` bugün gerçek spec içerir. Paket şu güvenli
 dosyaları kurar:
 
 - `/usr/lib/ro-asd/release.json`
@@ -116,3 +116,15 @@ Tema, wallpaper, icon/cursor, Plymouth ve mevcut tema KConfig dosyaları
 `ro-theme` sahipliğinde kalır. Ayrıntılı sınırlar
 `docs/DEFAULTS-OWNERSHIP-V1.md` ve
 `packages/ro-asd-defaults/defaults-policy-v1.json` içindedir.
+
+
+## Branding ownership modeli
+
+`ro-asd-branding` Ro-ASD'ye özgü görünür dağıtım kimliğinin sahibi olarak
+ayrılır. İlk `0.1.0` sürümü yalnız machine-readable branding contract taşır;
+Fedora release dosyalarını veya Fedora-owned logo yollarını değiştirmez.
+
+Mevcut Ro-Theme logosu v1'de Ro-Theme sahipliğinde kalır. Logo asset'leri
+branding paketine ancak tek canonical source-of-truth belirlendikten sonra
+taşınacaktır. Ayrıntılı sınırlar `docs/BRANDING-CONTRACT-V1.md` ve
+`packages/ro-asd-branding/branding-contract-v1.json` içindedir.
