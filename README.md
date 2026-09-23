@@ -11,7 +11,7 @@ Depoda bağımsız kaynak RPM aileleri planlanır:
 | --- | --- | --- |
 | `ro-asd-release` | Makinece okunabilir Ro-ASD/Fedora sürüm metadatası | İlk çalışan RPM iskeleti |
 | `ro-asd-keyring` | Ro-ASD public trust anahtarları | İlk çalışan RPM iskeleti |
-| `ro-asd-repos` | İstemci repo dosyaları | Ro-Repo V2 sözleşmesini bekliyor |
+| `ro-asd-repos` | İstemci repo dosyaları | İlk çalışan RPM iskeleti |
 | `ro-asd-branding` | Logo, ad ve dağıtım kimliği varlıkları | Fedora marka incelemesini bekliyor |
 | `ro-asd-defaults` | Paketlenmiş masaüstü ve sistem varsayılanları | Sahiplik matrisi hazırlanacak |
 | `ro-asd-kernel-policy` | Kararlı/deneysel/fallback çekirdek kanal politikası | Fedora 44 çekirdek kaynağını bekliyor |
@@ -22,16 +22,27 @@ yaşayabilirler ancak bağımsız sürümlenir ve bağımsız SRPM üretirler.
 
 ## İlk çalışan parça
 
-`packages/ro-asd-release` ve `packages/ro-asd-keyring` bugün gerçek spec içerir. Paket şu güvenli
+`packages/ro-asd-release`, `packages/ro-asd-keyring` ve `packages/ro-asd-repos` bugün gerçek spec içerir. Paket şu güvenli
 dosyaları kurar:
 
 - `/usr/lib/ro-asd/release.json`
 - `/usr/lib/ro-asd/release`
 - `/etc/ro-asd-release` sembolik bağı
 
-Bu aşamada `/usr/lib/os-release`, Fedora logo/marka dosyaları, repo URL'leri,
-GPG anahtarları, çekirdek politikası veya `system-release` provides/obsoletes
-değiştirilmez.
+Bu aşamada `/usr/lib/os-release`, Fedora logo/marka dosyaları, çekirdek
+politikası veya `system-release` provides/obsoletes değiştirilmez.
+
+`ro-asd-repos` şu DNF kanallarını tanımlar:
+
+- `ro-asd-beta`: varsayılan açık
+- `ro-asd-beta-source`: kapalı
+- `ro-asd-stable`: kapalı
+- `ro-asd-stable-source`: kapalı
+
+İlk sürümde beta kanalının açık olmasının nedeni, public Ro-Repo V2 ağacında
+henüz stable kanalının bulunmamasıdır. Tüm tanımlar hem RPM hem repository
+metadata signature doğrulamasını zorunlu tutar ve `ro-asd-keyring >= 0.1.0`
+bağımlılığı ile trust material'i paket üzerinden alır.
 
 `VERSION.yaml` ürün sürümü için tek kaynaktır. Ro-ASD görünür ürün sürümü
 Fedora tabanıyla birlikte `44` iken bu RPM'in bileşen sürümü bağımsız olarak
@@ -89,7 +100,6 @@ Private signing key hiçbir zaman bu depoya veya keyring RPM'ine girmez.
 
 ## Bilinçli olarak bekletilen işler
 
-- Canlı alan adı ve repo URL'lerinin pakete yazılması
 - Fedora kimlik dosyalarının değiştirilmesi
 - KIWI compose ve ISO üretimi
 - Diğer paket ailelerinin production producer workflow'a bağlanması
