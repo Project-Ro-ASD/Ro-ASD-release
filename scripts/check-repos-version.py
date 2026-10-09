@@ -41,10 +41,12 @@ def main() -> int:
             raise ValueError("unsupported repos VERSION schema")
         if values.get("component") != "ro-asd-repos":
             raise ValueError("wrong component")
-        if values.get("component_version") != "0.1.0":
-            raise ValueError("unexpected initial component_version")
-        if values.get("component_release") != "1":
-            raise ValueError("unexpected component_release")
+        component_version = values.get("component_version", "")
+        if not re.fullmatch(r"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)", component_version):
+            raise ValueError("component_version must be a semantic version")
+        component_release = values.get("component_release", "")
+        if not re.fullmatch(r"[1-9][0-9]*", component_release):
+            raise ValueError("component_release must be a positive integer")
         if values.get("fedora_release") != "44":
             raise ValueError("Fedora release must be 44")
         if values.get("public_baseurl") != "https://repo.ro-asd.org/rpm/fedora/44":
@@ -82,6 +84,11 @@ def main() -> int:
                 raise ValueError(f"{section}: trust key set mismatch")
             if cfg.get("skip_if_unavailable") != "0":
                 raise ValueError(f"{section}: repository must fail closed")
+            # Only binary channels get priority. Prevent accidental prioritization
+            # of source repositories or an unreviewed priority change.
+            expected_priority = "10" if not section.endswith("-source") else None
+            if cfg.get("priority", fallback=None) != expected_priority:
+                raise ValueError(f"{section}: unexpected repo priority")
     except (OSError, ValueError, configparser.Error) as error:
         print(f"HATA: {error}", file=sys.stderr)
         return 1
