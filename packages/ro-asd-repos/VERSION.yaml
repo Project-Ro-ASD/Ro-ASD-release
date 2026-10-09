@@ -1,6 +1,6 @@
 schema_version: 1
 component: ro-asd-repos
-component_version: 0.1.0
+component_version: 0.1.1
 component_release: 1
 fedora_release: 44
 public_baseurl: https://repo.ro-asd.org/rpm/fedora/44
