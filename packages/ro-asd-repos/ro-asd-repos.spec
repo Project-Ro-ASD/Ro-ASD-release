@@ -1,5 +1,5 @@
 Name:           ro-asd-repos
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        Ro-ASD DNF repository definitions
 
@@ -30,5 +30,7 @@ install -Dpm 0644 ro-asd.repo \
 %config(noreplace) %{_sysconfdir}/yum.repos.d/ro-asd.repo
 
 %changelog
+* Fri Oct 09 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.1-1
+- Prefer Ro-ASD binary repositories for reviewed Fedora package overrides
 * Wed Sep 23 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.0-1
 - Add signed Ro-ASD beta and stable DNF repository definitions
