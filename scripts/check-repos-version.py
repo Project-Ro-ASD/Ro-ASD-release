@@ -42,7 +42,7 @@ def main() -> int:
         if values.get("component") != "ro-asd-repos":
             raise ValueError("wrong component")
         component_version = values.get("component_version", "")
-        if not re.fullmatch(r"(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)", component_version):
+        if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", component_version):
             raise ValueError("component_version must be a semantic version")
         component_release = values.get("component_release", "")
         if not re.fullmatch(r"[1-9][0-9]*", component_release):
