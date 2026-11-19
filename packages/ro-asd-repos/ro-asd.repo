@@ -1,6 +1,6 @@
 [ro-asd-beta]
 name=Ro-ASD Fedora 44 Beta - $basearch
-mirrorlist=https://packages.ro-asd.org/channels/fedora/44/beta/x86_64.txt
+mirrorlist=https://packages.ro-asd.org/channels/fedora/44/beta/$basearch.txt
 enabled=1
 priority=10
 gpgcheck=1
