@@ -34,10 +34,17 @@ politikası veya `system-release` provides/obsoletes değiştirilmez.
 
 `ro-asd-repos` şu DNF kanallarını tanımlar:
 
-- `ro-asd-beta`: varsayılan açık
+- `ro-asd-beta`: varsayılan açık, imzalı R2 kanalı
+  (`https://packages.ro-asd.org/channels/fedora/44/beta/x86_64.txt` mirrorlist)
+- `ro-asd-beta-legacy`: kapalı, eski `repo.ro-asd.org` beta’sı; yalnız kurtarma için elle açılır
 - `ro-asd-beta-source`: kapalı
 - `ro-asd-stable`: kapalı
 - `ro-asd-stable-source`: kapalı
+
+`0.1.2` sürümünden itibaren paket yalnız Fedora 44 `x86_64` içindir. R2 beta
+kanalı yalnız bu mimaride var; aarch64 istemciler eski `0.1.1` `noarch`
+paketinde ve eski beta adresinde kalır. Repo dosyasını elle değiştirmiş
+istemcilerde dosya korunur, yeni ayar `.rpmnew` olarak bırakılır.
 
 İlk sürümde beta kanalının açık olmasının nedeni, public Ro-Repo V2 ağacında
 henüz stable kanalının bulunmamasıdır. Tüm tanımlar hem RPM hem repository
