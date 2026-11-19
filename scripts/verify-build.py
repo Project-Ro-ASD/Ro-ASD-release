@@ -11,11 +11,6 @@ import sys
 from pathlib import Path
 
 
-# Components whose binary RPM is not noarch. ro-asd-repos 0.1.2 is x86_64 only
-# because the R2 beta channel exists only for Fedora 44 x86_64.
-BINARY_ARCH = {"ro-asd-repos": "x86_64"}
-
-
 def rpm_query(path: Path) -> tuple[str, str, str, str, str]:
     query = "%{NAME}\\n%{EPOCHNUM}\\n%{VERSION}\\n%{RELEASE}\\n%{ARCH}\\n"
     output = subprocess.check_output(
@@ -70,12 +65,12 @@ def main() -> int:
             key = (source_name, version, release)
             if arch == "src":
                 sources.add((name, version, release))
-            elif arch == BINARY_ARCH.get(args.component, "noarch"):
+            elif arch == "noarch":
                 binaries.add(key)
             else:
                 raise ValueError(f"{args.component} için desteklenmeyen mimari: {arch}")
         if not binaries:
-            raise ValueError(f"{BINARY_ARCH.get(args.component, 'noarch')} RPM eksik")
+            raise ValueError("noarch RPM eksik")
         if binaries - sources:
             raise ValueError("binary RPM ile eşleşen SRPM eksik")
 

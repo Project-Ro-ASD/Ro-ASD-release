@@ -99,9 +99,8 @@ def main() -> int:
         )
     if not any(item["architecture"] == "src" for item in artifacts):
         raise ValueError("SRPM eksik")
-    binary_arch = "x86_64" if args.component == "ro-asd-repos" else "noarch"
-    if not any(item["architecture"] == binary_arch for item in artifacts):
-        raise ValueError(f"{binary_arch} binary RPM eksik")
+    if not any(item["architecture"] == "noarch" for item in artifacts):
+        raise ValueError("noarch binary RPM eksik")
 
     manifest = {
         "schema_version": 1,

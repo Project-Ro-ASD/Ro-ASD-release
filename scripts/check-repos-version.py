@@ -11,7 +11,7 @@ VERSION = ROOT / "packages/ro-asd-repos/VERSION.yaml"
 SPEC = ROOT / "packages/ro-asd-repos/ro-asd-repos.spec"
 REPO = ROOT / "packages/ro-asd-repos/ro-asd.repo"
 
-BETA_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/beta/x86_64.txt"
+BETA_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/beta/$basearch.txt"
 
 # section -> (URL key, URL, enabled). The active beta uses the signed R2 channel;
 # the legacy beta stays available only as an explicitly enabled recovery repo.
@@ -58,8 +58,8 @@ def main() -> int:
             raise ValueError("public baseurl mismatch")
         if values.get("default_channel") != "beta":
             raise ValueError("initial default channel must be beta")
-        if values.get("architecture") != "x86_64":
-            raise ValueError("R2 beta migration is x86_64 only")
+        if values.get("architecture") != "noarch":
+            raise ValueError("ro-asd-repos must stay noarch; the channel is chosen by $basearch")
         if values.get("beta_mirrorlist") != BETA_MIRRORLIST:
             raise ValueError("beta mirrorlist mismatch")
 
@@ -70,8 +70,8 @@ def main() -> int:
             raise ValueError("spec Release mismatch")
         if "Requires:       ro-asd-keyring >= 0.1.0" not in spec:
             raise ValueError("keyring dependency missing")
-        if spec_value(spec, "BuildArch") != "x86_64" or spec_value(spec, "ExclusiveArch") != "x86_64":
-            raise ValueError("spec must be x86_64 only; aarch64 keeps the legacy noarch package")
+        if spec_value(spec, "BuildArch") != "noarch" or "ExclusiveArch" in spec:
+            raise ValueError("spec must be noarch for every architecture")
 
         parser = configparser.RawConfigParser(interpolation=None)
         parser.read(REPO, encoding="utf-8")
