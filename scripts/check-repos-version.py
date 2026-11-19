@@ -11,11 +11,16 @@ VERSION = ROOT / "packages/ro-asd-repos/VERSION.yaml"
 SPEC = ROOT / "packages/ro-asd-repos/ro-asd-repos.spec"
 REPO = ROOT / "packages/ro-asd-repos/ro-asd.repo"
 
+BETA_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/beta/x86_64.txt"
+
+# section -> (URL key, URL, enabled). The active beta uses the signed R2 channel;
+# the legacy beta stays available only as an explicitly enabled recovery repo.
 EXPECTED = {
-    "ro-asd-beta": ("https://repo.ro-asd.org/rpm/fedora/44/beta/$basearch/", "1"),
-    "ro-asd-beta-source": ("https://repo.ro-asd.org/rpm/fedora/44/beta/source/", "0"),
-    "ro-asd-stable": ("https://repo.ro-asd.org/rpm/fedora/44/stable/$basearch/", "0"),
-    "ro-asd-stable-source": ("https://repo.ro-asd.org/rpm/fedora/44/stable/source/", "0"),
+    "ro-asd-beta": ("mirrorlist", BETA_MIRRORLIST, "1"),
+    "ro-asd-beta-legacy": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/$basearch/", "0"),
+    "ro-asd-beta-source": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/source/", "0"),
+    "ro-asd-stable": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/stable/$basearch/", "0"),
+    "ro-asd-stable-source": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/stable/source/", "0"),
 }
 
 def load_version(path: Path) -> dict[str, str]:
@@ -53,6 +58,10 @@ def main() -> int:
             raise ValueError("public baseurl mismatch")
         if values.get("default_channel") != "beta":
             raise ValueError("initial default channel must be beta")
+        if values.get("architecture") != "x86_64":
+            raise ValueError("R2 beta migration is x86_64 only")
+        if values.get("beta_mirrorlist") != BETA_MIRRORLIST:
+            raise ValueError("beta mirrorlist mismatch")
 
         spec = SPEC.read_text(encoding="utf-8")
         if spec_value(spec, "Version") != values["component_version"]:
@@ -61,6 +70,8 @@ def main() -> int:
             raise ValueError("spec Release mismatch")
         if "Requires:       ro-asd-keyring >= 0.1.0" not in spec:
             raise ValueError("keyring dependency missing")
+        if spec_value(spec, "BuildArch") != "x86_64" or spec_value(spec, "ExclusiveArch") != "x86_64":
+            raise ValueError("spec must be x86_64 only; aarch64 keeps the legacy noarch package")
 
         parser = configparser.RawConfigParser(interpolation=None)
         parser.read(REPO, encoding="utf-8")
@@ -71,10 +82,11 @@ def main() -> int:
             "file:///etc/pki/rpm-gpg/REPODATA-GPG-KEY-ro-asd",
             "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ro-asd",
         }
-        for section, (baseurl, enabled) in EXPECTED.items():
+        for section, (url_key, url, enabled) in EXPECTED.items():
             cfg = parser[section]
-            if cfg.get("baseurl") != baseurl:
-                raise ValueError(f"{section}: baseurl mismatch")
+            other_key = "baseurl" if url_key == "mirrorlist" else "mirrorlist"
+            if cfg.get(url_key) != url or other_key in cfg:
+                raise ValueError(f"{section}: {url_key} mismatch")
             if cfg.get("enabled") != enabled:
                 raise ValueError(f"{section}: enabled mismatch")
             if cfg.get("gpgcheck") != "1" or cfg.get("repo_gpgcheck") != "1":
@@ -82,6 +94,8 @@ def main() -> int:
             keys = set(cfg.get("gpgkey", "").split())
             if keys != expected_keys:
                 raise ValueError(f"{section}: trust key set mismatch")
+            if section in {"ro-asd-beta", "ro-asd-beta-legacy"} and cfg.get("sslverify") != "1":
+                raise ValueError(f"{section}: TLS verification must be enabled")
             if cfg.get("skip_if_unavailable") != "0":
                 raise ValueError(f"{section}: repository must fail closed")
             # Only binary channels get priority. Prevent accidental prioritization

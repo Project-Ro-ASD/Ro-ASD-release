@@ -78,7 +78,7 @@ jobs:
 
           mapfile -t RPMS < <(find dist -maxdepth 1 -type f -name '*.rpm' -printf '%f\n' | sort)
           [[ "${#RPMS[@]}" -eq 2 ]]
-          [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.noarch\.rpm$')" -eq 1 ]]
+          [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.x86_64\.rpm$')" -eq 1 ]]
           [[ "$(printf '%s\n' "${RPMS[@]}" | grep -c '\.src\.rpm$')" -eq 1 ]]
 
       - name: Normalize container artifact ownership
@@ -143,7 +143,7 @@ jobs:
           assert manifest["component"] == "ro-asd-repos"
           assert manifest["source_repository"] == "Project-Ro-ASD/Ro-ASD-release"
           assert manifest["fedora_release"] == 44
-          assert {item["architecture"] for item in manifest["artifacts"]} == {"noarch", "src"}
+          assert {item["architecture"] for item in manifest["artifacts"]} == {"x86_64", "src"}
           PY
 
       - name: Verify checksum set for release assets
