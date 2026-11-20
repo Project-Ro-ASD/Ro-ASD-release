@@ -12,6 +12,7 @@ SPEC = ROOT / "packages/ro-asd-repos/ro-asd-repos.spec"
 REPO = ROOT / "packages/ro-asd-repos/ro-asd.repo"
 
 BETA_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/beta/$basearch.txt"
+STABLE_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/stable/$basearch.txt"
 
 # section -> (URL key, URL, enabled). The active beta uses the signed R2 channel;
 # the legacy beta stays available only as an explicitly enabled recovery repo.
@@ -19,7 +20,7 @@ EXPECTED = {
     "ro-asd-beta": ("mirrorlist", BETA_MIRRORLIST, "1"),
     "ro-asd-beta-legacy": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/$basearch/", "0"),
     "ro-asd-beta-source": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/source/", "0"),
-    "ro-asd-stable": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/stable/$basearch/", "0"),
+    "ro-asd-stable": ("mirrorlist", STABLE_MIRRORLIST, "0"),
     "ro-asd-stable-source": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/stable/source/", "0"),
 }
 
@@ -94,7 +95,7 @@ def main() -> int:
             keys = set(cfg.get("gpgkey", "").split())
             if keys != expected_keys:
                 raise ValueError(f"{section}: trust key set mismatch")
-            if section in {"ro-asd-beta", "ro-asd-beta-legacy"} and cfg.get("sslverify") != "1":
+            if section in {"ro-asd-beta", "ro-asd-beta-legacy", "ro-asd-stable"} and cfg.get("sslverify") != "1":
                 raise ValueError(f"{section}: TLS verification must be enabled")
             if cfg.get("skip_if_unavailable") != "0":
                 raise ValueError(f"{section}: repository must fail closed")

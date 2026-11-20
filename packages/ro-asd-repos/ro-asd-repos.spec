@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           ro-asd-repos
-Version:        0.1.3
+Version:        0.1.4
 Release:        1%{?dist}
 Summary:        Ro-ASD DNF repository definitions
 
@@ -33,6 +33,8 @@ install -Dpm 0644 ro-asd.repo \
 %config(noreplace) %{_sysconfdir}/yum.repos.d/ro-asd.repo
 
 %changelog
+* Fri Nov 20 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.4-1
+- Point the opt-in stable repository at the signed R2 stable channel
 * Fri Nov 20 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.3-1
 - Return to noarch and select the R2 beta channel by $basearch
 * Thu Nov 19 2026 Project Ro-ASD <dev@ro-asd.invalid> - 0.1.2-1
