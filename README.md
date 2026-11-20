@@ -38,7 +38,8 @@ politikası veya `system-release` provides/obsoletes değiştirilmez.
   (`https://packages.ro-asd.org/channels/fedora/44/beta/$basearch.txt` mirrorlist)
 - `ro-asd-beta-legacy`: kapalı, eski `repo.ro-asd.org` beta’sı; yalnız kurtarma için elle açılır
 - `ro-asd-beta-source`: kapalı
-- `ro-asd-stable`: kapalı
+- `ro-asd-stable`: kapalı, isteğe bağlı açılan imzalı R2 stable kanalı
+  (`https://packages.ro-asd.org/channels/fedora/44/stable/$basearch.txt` mirrorlist)
 - `ro-asd-stable-source`: kapalı
 
 Paket `noarch`’tır. Beta kanalı mimariye göre `$basearch` ile seçilir. R2’de
