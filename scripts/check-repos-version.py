@@ -13,10 +13,12 @@ REPO = ROOT / "packages/ro-asd-repos/ro-asd.repo"
 
 BETA_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/beta/$basearch.txt"
 STABLE_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/stable/$basearch.txt"
+DEV_MIRRORLIST = "https://packages.ro-asd.org/channels/fedora/44/dev/$basearch.txt"
 
 # section -> (URL key, URL, enabled). The active beta uses the signed R2 channel;
 # the legacy beta stays available only as an explicitly enabled recovery repo.
 EXPECTED = {
+    "ro-asd-dev": ("mirrorlist", DEV_MIRRORLIST, "0"),
     "ro-asd-beta": ("mirrorlist", BETA_MIRRORLIST, "1"),
     "ro-asd-beta-legacy": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/$basearch/", "0"),
     "ro-asd-beta-source": ("baseurl", "https://repo.ro-asd.org/rpm/fedora/44/beta/source/", "0"),
